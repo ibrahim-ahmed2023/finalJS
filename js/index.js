@@ -1,43 +1,42 @@
 document.addEventListener("DOMContentLoaded", () => {
-    init();
+    initialize();
 })
 
-const init = async () => {
+let initialize = async () => {
     await searchByName("");
     document.querySelector(".mainLoading").style.display = 'none';
-    document.body.style.overflow = 'visible';
     closeSideNav();
-    attachEventListeners();
+    allEvents();
 }
 
-const openSideNav = () => {
+let openSideNav = () => {
     document.querySelector(".side-nav").style.left = '0';
     toggleMenuIcon();
     animateLinks(0);
 }
 
-const closeSideNav = () => {
-    const navWidth = document.querySelector(".side-nav .nav-items").offsetWidth;
+let closeSideNav = () => {
+    let navWidth = document.querySelector(".side-nav .nav-items").offsetWidth;
     document.querySelector(".side-nav").style.left = `-${navWidth}px`;
     toggleMenuIcon();
     animateLinks(300);
 }
 
-const toggleMenuIcon = () => {
-    const menuIcon = document.querySelector(".openAndClose");
+let toggleMenuIcon = () => {
+    let menuIcon = document.querySelector(".openAndClose");
     menuIcon.classList.toggle("fa-x");
     menuIcon.classList.toggle("fa-bars");
 }
 
-const animateLinks = (top) => {
-    const links = document.querySelectorAll(".links li");
+let animateLinks = (top) => {
+    let links = document.querySelectorAll(".links li");
     links.forEach((link, index) => {
         link.style.top = `${top}px`;
         link.style.transitionDelay = `${(index + 5) * 100}ms`;
     });
 }
 
-const attachEventListeners = () => {
+let allEvents = () => {
     document.querySelector(".openAndClose").addEventListener("click", () => {
         if (document.querySelector(".side-nav").style.left === '0px') {
             closeSideNav();
@@ -63,8 +62,8 @@ const attachEventListeners = () => {
     })
 }
 
-const displayMeals = (mealArray) => {
-    const rowData = document.getElementById("row");
+let displayMeals = (mealArray) => {
+    let rowData = document.getElementById("row");
     rowData.innerHTML = mealArray.map(meal => `
         <div class="col-md-3">
             <div onclick="getMealDetails('${meal.idMeal}')" class="meal position-relative overflow-hidden rounded-2 cursor-pointer">
@@ -77,10 +76,10 @@ const displayMeals = (mealArray) => {
     `).join('');
 }
 
-const fetchData = async (url) => {
+let fetchData = async (url) => {
     $(".innerLoading").fadeIn(300);
     try {
-        const response = await fetch(url);
+        let response = await fetch(url);
         if (!response.ok) {throw new Error('Network response was not ok');}
         $(".innerLoading").fadeOut(300);
         return await response.json();
@@ -89,13 +88,13 @@ const fetchData = async (url) => {
     }
 }
 
-const getCategories = async () => {
-    const data = await fetchData('https://www.themealdb.com/api/json/v1/1/categories.php');
+let getCategories = async () => {
+    let data = await fetchData('https://www.themealdb.com/api/json/v1/1/categories.php');
     displayCategories(data.categories);
 }
 
-const displayCategories = (mealArray) => {
-    const rowData = document.getElementById("row");
+let displayCategories = (mealArray) => {
+    let rowData = document.getElementById("row");
     rowData.innerHTML = mealArray.map(meal => `
         <div class="col-md-3">
             <div onclick="getCategoryMeals('${meal.strCategory}')" class="meal position-relative overflow-hidden rounded-2 cursor-pointer">
@@ -109,13 +108,13 @@ const displayCategories = (mealArray) => {
     `).join('');
 }
 
-const getArea = async () => {
-    const data = await fetchData('https://www.themealdb.com/api/json/v1/1/list.php?a=list');
+let getArea = async () => {
+    let data = await fetchData('https://www.themealdb.com/api/json/v1/1/list.php?a=list');
     displayArea(data.meals);
 }
 
-const displayArea = (mealArray) => {
-    const rowData = document.getElementById("row");
+let displayArea = (mealArray) => {
+    let rowData = document.getElementById("row");
     rowData.innerHTML = mealArray.map(meal => `
         <div class="col-md-3">
             <div onclick="getAreaMeals('${meal.strArea}')" class="rounded-2 text-center cursor-pointer">
@@ -126,13 +125,13 @@ const displayArea = (mealArray) => {
     `).join('');
 }
 
-const getIngredients = async () => {
-    const data = await fetchData('https://www.themealdb.com/api/json/v1/1/list.php?i=list');
+let getIngredients = async () => {
+    let data = await fetchData('https://www.themealdb.com/api/json/v1/1/list.php?i=list');
     displayIngredients(data.meals.slice(0, 20));
 }
 
-const displayIngredients = (mealArray) => {
-    const rowData = document.getElementById("row");
+let displayIngredients = (mealArray) => {
+    let rowData = document.getElementById("row");
     rowData.innerHTML = mealArray.map(meal => `
         <div class="col-md-3">
             <div onclick="getIngredientsMeals('${meal.strIngredient}')" class="rounded-2 text-center cursor-pointer">
@@ -144,33 +143,33 @@ const displayIngredients = (mealArray) => {
     `).join('');
 }
 
-const getCategoryMeals = async (category) => {
-    const data = await fetchData(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${category}`);
+let getCategoryMeals = async (category) => {
+    let data = await fetchData(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${category}`);
     displayMeals(data.meals.slice(0, 20));
 }
 
-const getAreaMeals = async (area) => {
-    const data = await fetchData(`https://www.themealdb.com/api/json/v1/1/filter.php?a=${area}`);
+let getAreaMeals = async (area) => {
+    let data = await fetchData(`https://www.themealdb.com/api/json/v1/1/filter.php?a=${area}`);
     displayMeals(data.meals.slice(0, 20));
 }
 
-const getIngredientsMeals = async (ingredient) => {
-    const data = await fetchData(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${ingredient}`);
+let getIngredientsMeals = async (ingredient) => {
+    let data = await fetchData(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${ingredient}`);
     displayMeals(data.meals.slice(0, 20));
 }
 
-const getMealDetails = async (mealID) => {
-    const data = await fetchData(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${mealID}`);
+let getMealDetails = async (mealID) => {
+    let data = await fetchData(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${mealID}`);
     displayMealDetails(data.meals[0]);
 }
 
-const displayMealDetails = (meal) => {
-    const rowData = document.getElementById("row");
-    const ingredients = Array.from({ length: 20 }, (_, i) => meal[`strIngredient${i + 1}`] ? `
+let displayMealDetails = (meal) => {
+    let rowData = document.getElementById("row");
+    let ingredients = Array.from({ length: 20 }, (_, i) => meal[`strIngredient${i + 1}`] ? `
         <li class="alert alert-info m-2 p-1">${meal[`strMeasure${i + 1}`]} ${meal[`strIngredient${i + 1}`]}</li>` : ''
     ).join('');
 
-    const tags = meal.strTags ? meal.strTags.split(",").map(tag => `
+    let tags = meal.strTags ? meal.strTags.split(",").map(tag => `
         <li class="alert alert-danger m-2 p-1">${tag}</li>
     `).join('') : '';
 
@@ -194,8 +193,8 @@ const displayMealDetails = (meal) => {
     `;
 }
 
-const showSearchInputs = () => {
-    const searchContainer = document.getElementById("searchContainer");
+let showSearchInputs = () => {
+    let searchContainer = document.getElementById("searchContainer");
     searchContainer.innerHTML = `
         <div class="row py-4 g-4">
             <div class="col-md-6">
@@ -208,14 +207,14 @@ const showSearchInputs = () => {
     `;
 }
 
-const searchByName = async (term) => {
+let searchByName = async (term) => {
     $(".mainLoading").fadeOut(500)
-    const data = await fetchData(`https://www.themealdb.com/api/json/v1/1/search.php?s=${term}`);
+    let data = await fetchData(`https://www.themealdb.com/api/json/v1/1/search.php?s=${term}`);
     displayMeals(data.meals || []);
 }
 
-const searchByFLetter = async (term) => {
-    const data = await fetchData(`https://www.themealdb.com/api/json/v1/1/search.php?f=${term}`);
+let searchByFLetter = async (term) => {
+    let data = await fetchData(`https://www.themealdb.com/api/json/v1/1/search.php?f=${term}`);
     displayMeals(data.meals || []);
 };
 
@@ -229,7 +228,7 @@ let repasswordInput = false;
 
 
 function showContacts() {
-    const rowData = document.getElementById("row");
+    let rowData = document.getElementById("row");
     $(".innerLoading").fadeOut(300);
 
     rowData.innerHTML = `<div class="contact min-vh-100 d-flex justify-content-center align-items-center">
