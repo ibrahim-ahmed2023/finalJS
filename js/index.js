@@ -1,5 +1,224 @@
-let rowData = document.getElementById("row");
-let searchContainer = document.getElementById("searchContainer");
+document.addEventListener("DOMContentLoaded", () => {
+    init();
+})
+
+const init = async () => {
+    await searchByName("");
+    document.querySelector(".mainLoading").style.display = 'none';
+    document.body.style.overflow = 'visible';
+    closeSideNav();
+    attachEventListeners();
+}
+
+const openSideNav = () => {
+    document.querySelector(".side-nav").style.left = '0';
+    toggleMenuIcon();
+    animateLinks(0);
+}
+
+const closeSideNav = () => {
+    const navWidth = document.querySelector(".side-nav .nav-items").offsetWidth;
+    document.querySelector(".side-nav").style.left = `-${navWidth}px`;
+    toggleMenuIcon();
+    animateLinks(300);
+}
+
+const toggleMenuIcon = () => {
+    const menuIcon = document.querySelector(".openAndClose");
+    menuIcon.classList.toggle("fa-x");
+    menuIcon.classList.toggle("fa-bars");
+}
+
+const animateLinks = (top) => {
+    const links = document.querySelectorAll(".links li");
+    links.forEach((link, index) => {
+        link.style.top = `${top}px`;
+        link.style.transitionDelay = `${(index + 5) * 100}ms`;
+    });
+}
+
+const attachEventListeners = () => {
+    document.querySelector(".openAndClose").addEventListener("click", () => {
+        if (document.querySelector(".side-nav").style.left === '0px') {
+            closeSideNav();
+        } else {
+            openSideNav();
+        }
+    })
+    document.getElementById('getCategories').addEventListener('click', async () => {
+        await getCategories();
+        closeSideNav();
+    })
+    document.getElementById('getArea').addEventListener('click', async () => {
+        await getArea();
+        closeSideNav();
+    })
+    document.getElementById('getIngredients').addEventListener('click', async () => {
+        await getIngredients();
+        closeSideNav();
+    })
+    document.getElementById('showSearchInputs').addEventListener('click', () => {
+        showSearchInputs();
+        closeSideNav();
+    })
+}
+
+const displayMeals = (mealArray) => {
+    const rowData = document.getElementById("row");
+    rowData.innerHTML = mealArray.map(meal => `
+        <div class="col-md-3">
+            <div onclick="getMealDetails('${meal.idMeal}')" class="meal position-relative overflow-hidden rounded-2 cursor-pointer">
+                <img class="w-100" src="${meal.strMealThumb}" alt="">
+                <div class="meal-layer position-absolute d-flex align-items-center text-black p-2">
+                    <h3>${meal.strMeal}</h3>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+const fetchData = async (url) => {
+    $(".innerLoading").fadeIn(300);
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {throw new Error('Network response was not ok');}
+        $(".innerLoading").fadeOut(300);
+        return await response.json();
+    } catch (error) {
+        alert('Failed to fetch data: ' + error.message);
+    }
+}
+
+const getCategories = async () => {
+    const data = await fetchData('https://www.themealdb.com/api/json/v1/1/categories.php');
+    displayCategories(data.categories);
+}
+
+const displayCategories = (mealArray) => {
+    const rowData = document.getElementById("row");
+    rowData.innerHTML = mealArray.map(meal => `
+        <div class="col-md-3">
+            <div onclick="getCategoryMeals('${meal.strCategory}')" class="meal position-relative overflow-hidden rounded-2 cursor-pointer">
+                <img class="w-100" src="${meal.strCategoryThumb}" alt="">
+                <div class="meal-layer position-absolute text-center text-black p-2">
+                    <h3>${meal.strCategory}</h3>
+                    <p>${meal.strCategoryDescription.split(" ").slice(0, 20).join(" ")}</p>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+const getArea = async () => {
+    const data = await fetchData('https://www.themealdb.com/api/json/v1/1/list.php?a=list');
+    displayArea(data.meals);
+}
+
+const displayArea = (mealArray) => {
+    const rowData = document.getElementById("row");
+    rowData.innerHTML = mealArray.map(meal => `
+        <div class="col-md-3">
+            <div onclick="getAreaMeals('${meal.strArea}')" class="rounded-2 text-center cursor-pointer">
+                <i class="fa-solid fa-house-laptop fa-4x"></i>
+                <h3>${meal.strArea}</h3>
+            </div>
+        </div>
+    `).join('');
+}
+
+const getIngredients = async () => {
+    const data = await fetchData('https://www.themealdb.com/api/json/v1/1/list.php?i=list');
+    displayIngredients(data.meals.slice(0, 20));
+}
+
+const displayIngredients = (mealArray) => {
+    const rowData = document.getElementById("row");
+    rowData.innerHTML = mealArray.map(meal => `
+        <div class="col-md-3">
+            <div onclick="getIngredientsMeals('${meal.strIngredient}')" class="rounded-2 text-center cursor-pointer">
+                <i class="fa-solid fa-drumstick-bite fa-4x"></i>
+                <h3>${meal.strIngredient}</h3>
+                <p>${meal.strDescription.split(" ").slice(0, 20).join(" ")}</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+const getCategoryMeals = async (category) => {
+    const data = await fetchData(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${category}`);
+    displayMeals(data.meals.slice(0, 20));
+}
+
+const getAreaMeals = async (area) => {
+    const data = await fetchData(`https://www.themealdb.com/api/json/v1/1/filter.php?a=${area}`);
+    displayMeals(data.meals.slice(0, 20));
+}
+
+const getIngredientsMeals = async (ingredient) => {
+    const data = await fetchData(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${ingredient}`);
+    displayMeals(data.meals.slice(0, 20));
+}
+
+const getMealDetails = async (mealID) => {
+    const data = await fetchData(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${mealID}`);
+    displayMealDetails(data.meals[0]);
+}
+
+const displayMealDetails = (meal) => {
+    const rowData = document.getElementById("row");
+    const ingredients = Array.from({ length: 20 }, (_, i) => meal[`strIngredient${i + 1}`] ? `
+        <li class="alert alert-info m-2 p-1">${meal[`strMeasure${i + 1}`]} ${meal[`strIngredient${i + 1}`]}</li>` : ''
+    ).join('');
+
+    const tags = meal.strTags ? meal.strTags.split(",").map(tag => `
+        <li class="alert alert-danger m-2 p-1">${tag}</li>
+    `).join('') : '';
+
+    rowData.innerHTML = `
+        <div class="col-md-4">
+            <img class="w-100 rounded-3" src="${meal.strMealThumb}" alt="">
+            <h2>${meal.strMeal}</h2>
+        </div>
+        <div class="col-md-8">
+            <h2>Instructions</h2>
+            <p>${meal.strInstructions}</p>
+            <h3><span class="fw-bolder">Area : </span>${meal.strArea}</h3>
+            <h3><span class="fw-bolder">Category : </span>${meal.strCategory}</h3>
+            <h3>Recipes :</h3>
+            <ul class="list-unstyled d-flex g-3 flex-wrap">${ingredients}</ul>
+            <h3>Tags :</h3>
+            <ul class="list-unstyled d-flex g-3 flex-wrap">${tags}</ul>
+            <a target="_blank" href="${meal.strSource}" class="btn btn-success">Source</a>
+            <a target="_blank" href="${meal.strYoutube}" class="btn btn-danger">YouTube</a>
+        </div>
+    `;
+}
+
+const showSearchInputs = () => {
+    const searchContainer = document.getElementById("searchContainer");
+    searchContainer.innerHTML = `
+        <div class="row py-4 g-4">
+            <div class="col-md-6">
+                <input onkeyup="searchByName(this.value)" class="form-control bg-white text-black" type="text" placeholder="Search By Name">
+            </div>
+            <div class="col-md-6">
+                <input onkeyup="searchByFLetter(this.value)" maxlength="1" class="form-control bg-white text-black" type="text" placeholder="Search By First Letter">
+            </div>
+        </div>
+    `;
+}
+
+const searchByName = async (term) => {
+    $(".mainLoading").fadeOut(500)
+    const data = await fetchData(`https://www.themealdb.com/api/json/v1/1/search.php?s=${term}`);
+    displayMeals(data.meals || []);
+}
+
+const searchByFLetter = async (term) => {
+    const data = await fetchData(`https://www.themealdb.com/api/json/v1/1/search.php?f=${term}`);
+    displayMeals(data.meals || []);
+};
+
 let submitBtn;
 let nameInput = false;
 let emailInput = false;
@@ -8,314 +227,11 @@ let ageInput = false;
 let passwordInput = false;
 let repasswordInput = false;
 
-// appear mainLoading when document loading
-$(document).ready(() => {
-    searchByName("").then(() => {
-        $(".mainLoading").fadeOut(500)
-    })
-})
-
-// open side nav
-function openSideNav() {
-    $(".side-nav").animate({left: 0}, 500);
-    $(".openAndClose").removeClass("fa-bars");
-    $(".openAndClose").addClass("fa-x");
-    for (let i = 0; i < 5; i++) {
-        $(".links li").eq(i).animate({
-            top: 0
-        }, (i + 5) * 100)
-    }
-}
-
-// close side nav
-function closeSideNav() {
-    let navWidth = $(".side-nav .nav-items").outerWidth();
-    $(".side-nav").animate({left: -navWidth}, 500);
-    $(".openAndClose").addClass("fa-bars");
-    $(".openAndClose").removeClass("fa-x");
-    $(".links li").animate({top: 300}, 500);
-}
-
-// before any thing i need side nav closed
-closeSideNav();
-// side nav events
-$(".openAndClose").click(() => {
-    if ($(".side-nav").css("left") == "0px") {
-        closeSideNav();
-    } 
-    else {
-        openSideNav();
-    }
-})
-
-// display meals 
-function displayMeals(mealArray) {
-    let displayMealContainer = "";
-    for (let i = 0; i < mealArray.length; i++) {
-        displayMealContainer += `
-        <div class="col-md-3">
-                <div onclick="getMealDetails('${mealArray[i].idMeal}')" class="meal position-relative overflow-hidden rounded-2 cursor-pointer">
-                    <img class="w-100" src="${mealArray[i].strMealThumb}" alt="" srcset="">
-                    <div class="meal-layer position-absolute d-flex align-items-center text-black p-2">
-                        <h3>${mealArray[i].strMeal}</h3>
-                    </div>
-                </div>
-        </div>
-        `
-        // console.log(displayMealContainer);
-    }
-    rowData.innerHTML = displayMealContainer;
-}
-
-// get category from api
-async function getCategories() {
-    rowData.innerHTML = "";
-    $(".innerLoading").fadeIn(300);
-    searchContainer.innerHTML = "";
-    let categoryResponse = await fetch(`https://www.themealdb.com/api/json/v1/1/categories.php`);
-    // console.log(categoryResponse);
-    categoryResponse = await categoryResponse.json();
-    // console.log(categoryResponse);
-    displayCategories(categoryResponse.categories);
-    $(".innerLoading").fadeOut(300);
-
-}
-
-// display 20 meals from category
-function displayCategories(mealArray) {
-    let displayMealByCategory = "";
-    for (let i = 0; i < mealArray.length; i++) {
-        displayMealByCategory += `
-        <div class="col-md-3">
-                <div onclick="getCategoryMeals('${mealArray[i].strCategory}')" class="meal position-relative overflow-hidden rounded-2 cursor-pointer">
-                    <img class="w-100" src="${mealArray[i].strCategoryThumb}" alt="" srcset="">
-                    <div class="meal-layer position-absolute text-center text-black p-2">
-                        <h3>${mealArray[i].strCategory}</h3>
-                        <p>${mealArray[i].strCategoryDescription.split(" ").slice(0,20).join(" ")}</p>
-                    </div>
-                </div>
-        </div>
-        `
-    }
-
-    rowData.innerHTML = displayMealByCategory;
-}
-
-// get areas from api
-async function getArea() {
-    rowData.innerHTML = "";
-    $(".innerLoading").fadeIn(300);
-    searchContainer.innerHTML = "";
-    let areaRespone = await fetch(`https://www.themealdb.com/api/json/v1/1/list.php?a=list`);
-    // console.log(areaRespone);
-    areaRespone = await areaRespone.json();
-    // console.log(areaRespone)
-    displayArea(areaRespone.meals);
-    $(".innerLoading").fadeOut(300);
-
-}
-
-// display areas
-function displayArea(mealArray) {
-    let displayMealByArea = "";
-    for (let i = 0; i < mealArray.length; i++) {
-        displayMealByArea += `
-        <div class="col-md-3">
-                <div onclick="getAreaMeals('${mealArray[i].strArea}')" class="rounded-2 text-center cursor-pointer">
-                        <i class="fa-solid fa-house-laptop fa-4x"></i>
-                        <h3>${mealArray[i].strArea}</h3>
-                </div>
-        </div>
-        `
-    }
-
-    rowData.innerHTML = displayMealByArea;
-}
-
-
-// get ingrediants from api
-async function getIngredients() {
-    rowData.innerHTML = "";
-    $(".innerLoading").fadeIn(300);
-    searchContainer.innerHTML = "";
-    let ingredientsRespone = await fetch(`https://www.themealdb.com/api/json/v1/1/list.php?i=list`);
-    // console.log(ingredientsRespone);
-    ingredientsRespone = await ingredientsRespone.json();
-    // console.log(ingredientsRespone);
-    displayIngredients(ingredientsRespone.meals.slice(0, 20));
-    $(".innerLoading").fadeOut(300);
-}
-
-// display ingrediants
-function displayIngredients(mealArray) {
-    let displayMealByIngrediants = "";
-    for (let i = 0; i < mealArray.length; i++) {
-        displayMealByIngrediants += `
-        <div class="col-md-3">
-                <div onclick="getIngredientsMeals('${mealArray[i].strIngredient}')" class="rounded-2 text-center cursor-pointer">
-                        <i class="fa-solid fa-drumstick-bite fa-4x"></i>
-                        <h3>${mealArray[i].strIngredient}</h3>
-                        <p>${mealArray[i].strDescription.split(" ").slice(0,20).join(" ")}</p>
-                </div>
-        </div>   `
-    }
-
-    rowData.innerHTML = displayMealByIngrediants;
-}
-
-
-async function getCategoryMeals(category) {
-    rowData.innerHTML = "";
-    $(".innerLoading").fadeIn(300);
-    let getCategoryResponse = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${category}`);
-    // console.log(getCategoryResponse);
-    getCategoryResponse = await getCategoryResponse.json();
-    // console.log(getCategoryResponse);
-    displayMeals(getCategoryResponse.meals.slice(0, 20));
-    $(".innerLoading").fadeOut(300);
-
-}
-$('#getCategories').click(()=>{
-    getCategories(); closeSideNav();
-})
-
-async function getAreaMeals(area) {
-    rowData.innerHTML = "";
-    $(".innerLoading").fadeIn(300);
-    let getAreaResponse = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?a=${area}`);
-    // console.log(getAreaResponse);
-    getAreaResponse = await getAreaResponse.json();
-    // console.log(getAreaResponse);
-    displayMeals(getAreaResponse.meals.slice(0, 20));
-    $(".innerLoading").fadeOut(300);
-
-}
-$('#getArea').click(()=>{
-    getArea(); closeSideNav();
-})
-
-
-async function getIngredientsMeals(ingredients) {
-    rowData.innerHTML = "";
-    $(".innerLoading").fadeIn(300);
-    let getIngredientsResponse = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${ingredients}`);
-    // console.log(getIngredientsResponse);
-    getIngredientsResponse = await getIngredientsResponse.json();
-    // console.log(getIngredientsResponse);
-    displayMeals(getIngredientsResponse.meals.slice(0, 20));
-    $(".innerLoading").fadeOut(300);
-
-}
-$('#getIngredients').click(()=>{
-    getIngredients(); closeSideNav();
-})
-async function getMealDetails(mealID) {
-    closeSideNav();
-    rowData.innerHTML = "";
-    $(".innerLoading").fadeIn(300);
-    searchContainer.innerHTML = "";
-    let getMealDetailsrespone = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${mealID}`);
-    // console.log(getMealDetailsrespone);
-    getMealDetailsrespone = await getMealDetailsrespone.json();
-    // console.log(getMealDetailsrespone);
-    displayMealDetails(getMealDetailsrespone.meals[0]);
-    $(".innerLoading").fadeOut(300);
-
-}
-
-
-function displayMealDetails(meal) { 
-    searchContainer.innerHTML = "";
-    let ingredients = ``
-    for (let i = 1; i <= 20; i++) {
-        if (meal[`strIngredient${i}`]) {
-            ingredients += `<li class="alert alert-info m-2 p-1">${meal[`strMeasure${i}`]} ${meal[`strIngredient${i}`]}</li>`
-        }
-    }
-    let tags = meal.strTags?.split(",")
-    if (!tags) tags = []
-    let tagsStr = ''
-    for (let i = 0; i < tags.length; i++) {
-        tagsStr += `
-        <li class="alert alert-danger m-2 p-1">${tags[i]}</li>`
-    }
-
-    let details = `
-    <div class="col-md-4">
-                <img class="w-100 rounded-3" src="${meal.strMealThumb}"
-                    alt="">
-                    <h2>${meal.strMeal}</h2>
-            </div>
-            <div class="col-md-8">
-                <h2>Instructions</h2>
-                <p>${meal.strInstructions}</p>
-                <h3><span class="fw-bolder">Area : </span>${meal.strArea}</h3>
-                <h3><span class="fw-bolder">Category : </span>${meal.strCategory}</h3>
-                <h3>Recipes :</h3>
-                <ul class="list-unstyled d-flex g-3 flex-wrap">
-                    ${ingredients}
-                </ul>
-
-                <h3>Tags :</h3>
-                <ul class="list-unstyled d-flex g-3 flex-wrap">
-                    ${tagsStr}
-                </ul>
-
-                <a target="_blank" href="${meal.strSource}" class="btn btn-success">Source</a>
-                <a target="_blank" href="${meal.strYoutube}" class="btn btn-danger">Youtube</a>
-            </div>`
-
-    rowData.innerHTML = details;
-}
-
-
-function showSearchInputs() {
-    searchContainer.innerHTML = `
-    <div class="row py-4 g-4">
-        <div class="col-md-6 ">
-            <input onkeyup="searchByName(this.value)" class="form-control bg-white text-black" type="text" placeholder="Search By Name">
-        </div>
-        <div class="col-md-6">
-            <input onkeyup="searchByFLetter(this.value)" maxlength="1" class="form-control bg-white text-black" type="text" placeholder="Search By First Letter">
-        </div>
-    </div>`
-
-    rowData.innerHTML = "";
-}
-
-async function searchByName(term) {
-    closeSideNav();
-    rowData.innerHTML = "";
-    $(".innerLoading").fadeIn(300);
-    let searchByNameresponse = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?s=${term}`);
-    // console.log(searchByNameresponse);
-    searchByNameresponse = await searchByNameresponse.json();
-    // console.log(searchByNameresponse);
-    searchByNameresponse.meals ? displayMeals(searchByNameresponse.meals) : displayMeals([]);
-    $(".innerLoading").fadeOut(300);
-
-}
-
-async function searchByFLetter(term) {
-    closeSideNav();
-    rowData.innerHTML = "";
-    $(".innerLoading").fadeIn(300);
-    term == "" ? term = "a" : "";
-    let seachByLetterResponse = await fetch(`https://www.themealdb.com/api/json/v1/1/search.php?f=${term}`)
-    // console.log(seachByLetterResponse);
-    seachByLetterResponse = await seachByLetterResponse.json()
-    // console.log(seachByLetterResponse);
-    seachByLetterResponse.meals ? displayMeals(seachByLetterResponse.meals) : displayMeals([])
-    $(".innerLoading").fadeOut(300)
-
-}
-
-$('#showSearchInputs').click(()=>{
-    showSearchInputs(); closeSideNav();
-})
-
 
 function showContacts() {
+    const rowData = document.getElementById("row");
+    $(".innerLoading").fadeOut(300);
+
     rowData.innerHTML = `<div class="contact min-vh-100 d-flex justify-content-center align-items-center">
     <div class="container w-75 text-center">
         <div class="row g-4">

@@ -14,7 +14,7 @@ a{
 body{
     background-color: var(--main0clr);
     color: #f9f6f6 !important;
-    overflow: hidden;
+    overflow-x: hidden;
 }
 .cursor-pointer{
     cursor: pointer;
